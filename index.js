@@ -7,40 +7,33 @@ app.get('/', function(req, res){
   res.send('Socket server is healthy');
 });
 
-let usersLookingForPartner = {};
+let users = {};
 
 io.on('connect', (socket) => {
   console.log(`socket ${socket.id} connected`);
 
   socket.emit('beh', 'here is a msg');
 
-  socket.on('lookingForPartner', (id) => {
-    console.log(id);
-    console.log(_.keys(usersLookingForPartner));
-    console.log(_.keys(usersLookingForPartner).length);
-    usersLookingForPartner[id] = socket;
-    if (_.keys(usersLookingForPartner).length < 2) { // all partners have null values
-    }
-    else {
-      console.log('\n\n');
-      console.log(_.keys(usersLookingForPartner));
-      let partner = pickRandomPartner(usersLookingForPartner, id);
-      console.log('matched to partner '+partner);
-      let partnerSocket = usersLookingForPartner[partner];
+  socket.on('findingPartner', (id) => {
+    users[id] = socket;
+    let partner = pickRandomPartner(users, id);
+    if (!partner) {return console.log('No other online users found');}
 
-      if (!partnerSocket) {return console.warn('partnerSocket is null');}
+    console.log('matched to partner '+partner);
+    let partnerSocket = users[partner];
 
-      let roomName = generateRoomName(id, partner);
+    if (!partnerSocket) {return console.warn('partnerSocket is null');}
 
-      socket.emit('matched', {room: roomName, id: partner});
-      partnerSocket.emit('matched', {room: roomName, id: id});
-    }
+    let roomName = generateRoomName(id, partner);
+
+    socket.emit('match', {room: roomName, id: partner});
+    partnerSocket.emit('match', {room: roomName, id: id});
   });
 
   socket.on('disconnect', () => {
-    let key = _.findKey(usersLookingForPartner, socket);
+    let key = _.findKey(users, socket);
     if (key) {
-      usersLookingForPartner[key] = null;
+      users[key] = null;
     }
     console.log(`socket ${socket.id} disconnected`);
   });
@@ -50,6 +43,7 @@ function pickRandomPartner(obj, id) {
   let onlineUsers = _.pickBy(obj, (value, key) => {
     return value !== null && key !== id;
   })
+  if (_.isEmpty(onlineUsers)) { return null; }
   let userids = _.keys(onlineUsers);
   let index = _.random(userids.length - 1);
   return userids[index];
