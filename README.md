@@ -1,2 +1,5 @@
-`npm install`
-`node index.js`
+##Running the server
+```
+npm install
+node index.js
+```
