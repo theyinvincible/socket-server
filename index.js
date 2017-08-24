@@ -15,33 +15,36 @@ io.on('connect', (socket) => {
   socket.emit('beh', 'here is a msg');
 
   socket.on('findingPartner', (id) => {
-    users[id] = socket;
-    let partner = pickRandomPartner(users, id);
-    if (!partner) {return console.log('No other online users found');}
-
-    console.log('matched to partner '+partner);
-    let partnerSocket = users[partner];
-
+    users[id] = {socket};
+    let partnerId = pickRandomPartner(users, id);
+    if (!partnerId) {return console.log('No available users found');}
+    let partnerSocket = users[partnerId].socket;
     if (!partnerSocket) {return console.warn('partnerSocket is null');}
 
-    let roomName = generateRoomName(id, partner);
+    console.log('matched to partner '+partnerId);
 
-    socket.emit('match', {room: roomName, id: partner});
+    let roomName = generateRoomName(id, partnerId);
+    users[id].room = roomName;
+    users[partnerId].room = roomName;
+    socket.emit('match', {room: roomName, id: partnerId});
     partnerSocket.emit('match', {room: roomName, id: id});
   });
 
   socket.on('disconnect', () => {
-    let key = _.findKey(users, socket);
+    let key = _.findKey(users, ['socket', socket]);
     if (key) {
-      users[key] = null;
+      users[key].socket = null;
+      users[key].room = null;
     }
     console.log(`socket ${socket.id} disconnected`);
   });
+
+  // figure fallout for when a user partner's disconnects
 });
 
 function pickRandomPartner(obj, id) {
   let onlineUsers = _.pickBy(obj, (value, key) => {
-    return value !== null && key !== id;
+    return value.socket && !value.room && key !== id;
   })
   if (_.isEmpty(onlineUsers)) { return null; }
   let userids = _.keys(onlineUsers);
