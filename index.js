@@ -48,6 +48,7 @@ io.on('connect', (socket) => {
 });
 
 function pickRandomPartner(obj, id) {
+  id = id.toString();
   let onlineUsers = _.pickBy(obj, (value, key) => {
     return value.socket && !value.room && key !== id;
   })
