@@ -39,6 +39,11 @@ io.on('connect', (socket) => {
     console.log(`socket ${socket.id} disconnected`);
   });
 
+  socket.on('leave-room', (id) => {
+    if (!id) {return console.warn('[leave-room] Missing id');}
+    users[id].room = null;
+  })
+
   // figure fallout for when a user partner's disconnects
 });
 
