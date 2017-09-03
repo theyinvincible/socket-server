@@ -14,10 +14,10 @@ io.on('connect', (socket) => {
 
   socket.emit('beh', 'here is a msg');
 
-  socket.on('findingPartner', (id) => {
+  socket.on('findingPartner', ({id, partners}) => {
     if (!id) { return console.warn('Unexpected null value for id');}
     users[id] = {socket};
-    let partnerId = pickRandomPartner(users, id);
+    let partnerId = pickRandomPartner(users, id, partners);
     if (!partnerId) {return console.log('No available users found');}
     let partnerSocket = users[partnerId].socket;
     if (!partnerSocket) {return console.warn('partnerSocket is null');}
@@ -48,14 +48,18 @@ io.on('connect', (socket) => {
   // figure fallout for when a user partner's disconnects
 });
 
-function pickRandomPartner(obj, id) {
+function pickRandomPartner(obj, id, prevMatches) {
   let onlineUsers = _.pickBy(obj, (value, key) => {
     return value.socket && !value.room && key !== id;
   })
   if (_.isEmpty(onlineUsers)) { return null; }
-  let userids = _.keys(onlineUsers);
-  let index = _.random(userids.length - 1);
-  return userids[index];
+  let matches = _.keys(onlineUsers);
+  let newMatches = _.difference(matches, prevMatches);
+  if (!_.isEmpty(newMatches)) {
+    matches = newMatches;
+  }
+  let index = _.random(matches.length - 1);
+  return matches[index];
 }
 
 function generateRoomName(firstName, secondName) {
