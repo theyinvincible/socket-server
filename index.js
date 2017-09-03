@@ -14,7 +14,7 @@ io.on('connect', (socket) => {
 
   socket.emit('beh', 'here is a msg');
 
-  socket.on('findingPartner', ({id, partners}) => {
+  socket.on('findingPartner', ({id, partners = []}) => {
     if (!id) { return console.warn('Unexpected null value for id');}
     users[id] = {socket};
     let partnerId = pickRandomPartner(users, id, partners);
