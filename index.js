@@ -46,8 +46,20 @@ io.on('connect', (socket) => {
     if (!id) {return console.warn('[leave-room] Missing id');}
     if (!users[id]) { return console.warn('[leave-room] No such active user'); }
     // console.log(`${id} asked to leave room`);
+    let room = users[id].room;
     users[id].room = null;
+
     // Find all other users in the room and ask them to disconnect
+    if (room) {
+      console.log(`[leave-room] Room is ${room}`);
+      let key = _.findKey(users, ['room', room]);
+      while (key) {
+        console.log(`[leave-room] telling ${key} to disconnect`);
+        users[key].room = null;
+        users[key].socket.emit('partner-disconnected');
+        key = _.findKey(users, ['room', room]);
+      }
+    }
   })
 
   // figure fallout for when a user partner's disconnects
