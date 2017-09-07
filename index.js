@@ -80,5 +80,5 @@ function pickRandomPartner(obj, id, prevMatches) {
 }
 
 function generateRoomName(firstName, secondName) {
-  return firstName + secondName;
+  return firstName + 'room' + secondName;
 }
