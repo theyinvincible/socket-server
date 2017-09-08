@@ -16,6 +16,11 @@ io.on('connect', (socket) => {
 
   socket.on('findingPartner', ({id, partners = []}) => {
     if (!id) { return console.warn('Unexpected null value for id');}
+
+    if (users[id] && users[id].socket) {
+      return socket.emit('already-exists');
+    }
+
     users[id] = {socket};
     let partnerId = pickRandomPartner(users, id, partners);
     if (!partnerId) {return console.log('No available users found');}
